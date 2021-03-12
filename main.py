@@ -2,4 +2,6 @@
 
 # Eoin Cowhey Introductory Certificate in Data Analytics
 
-# Project description
+# Project description: Distribution Transformer Online Monitoring
+
+
