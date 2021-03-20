@@ -77,36 +77,40 @@ missing_val2 = Power_Data.isnull().sum()
 print(Power_Data.head())
 print(Power_Data.dtypes)
 
-#I_V["WL1"] = I_V["VL1"] * I_V["IL1"]
-#print(I_V.head())
-#I_V["POWL1"] = I_V["VL1"] + I_V["IL1"]
-#print(I_V.head())
 
 #Power_Data.to_csv("Power_Data.csv")
 
+def Watts_Phase(Voltage, Current, PowerFactor):
+    return Voltage * Current * PowerFactor
+
+def var_Phase(Voltage, Current, PowerFactor):
+    return (Voltage * Current) * np.sin(np.arccos(PowerFactor))
 
 #Total Power
-Power_Data["WL1"] = Power_Data["VL1"] + Power_Data["IL1"] * Power_Data["PFL1"]
-Power_Data["WL2"] = Power_Data["VL2"] + Power_Data["IL2"] * Power_Data["PFL2"]
-Power_Data["WL3"] = Power_Data["VL3"] + Power_Data["IL3"] * Power_Data["PFL3"]
-Power_Data["kW_total"] = (Power_Data["WL1"] + Power_Data["WL2"] + Power_Data["WL3"])/1000
+Power_Data["WL1"] = Watts_Phase(Power_Data["VL1"],Power_Data["IL1"],Power_Data["PFL1"])
+Power_Data["WL2"] = Watts_Phase(Power_Data["VL2"],Power_Data["IL2"],Power_Data["PFL2"])
+Power_Data["WL3"] = Watts_Phase(Power_Data["VL3"],Power_Data["IL3"],Power_Data["PFL3"])
+Power_Data["varL1"] = var_Phase(Power_Data["VL1"], Power_Data["IL1"], Power_Data["PFL1"])
+Power_Data["varL2"] = var_Phase(Power_Data["VL2"], Power_Data["IL2"], Power_Data["PFL2"])
+Power_Data["varL3"] = var_Phase(Power_Data["VL3"], Power_Data["IL3"], Power_Data["PFL3"])
+
+
+# Calculate Total Active Power [kW], Reactive Power [kvar] for each sample using iterrows method.
+kW_total = []
+kvar_total = []
+
+for i, row in Power_Data.iterrows():
+   kW = (row["WL1"] + row["WL2"] + row["WL3"])/1000
+   kvar = (row["varL1"] + row["varL2"] + row["varL3"]) / 1000
+   kW_total.append(kW)
+   kvar_total.append(kvar)
+Power_Data["kW_total"] = kW_total
+Power_Data["kvar_total"] = kvar_total
+
+
+# Calculate Total Apparent Power [kvar] for each sample.
+Power_Data["kVA_total"] = (Power_Data["kW_total"]**2 + Power_Data["kvar_total"]**2)**(1/2)
+
+
 print(Power_Data.head())
 
-
-
-#results_list = []
-
-#for i, row in Power_Data.iterrows():
-   #WL1 = row["VL1"] * row["IL1"] #* row["PF"]
-   #results_list.append(WL1)
-
-#print(results_list)
-
-#Power_Data["WL1"] = results_list
-
-#print(Power_Data.head())
-
-#def POWER(Voltage, Current, PowerFactor):
-    #return Voltage * Current * PowerFactor
-
-#def POWER(Power_Data[])
