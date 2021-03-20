@@ -12,6 +12,12 @@ IV_Import = pd.read_csv('CurrentVoltage.csv')
 PF_Import = pd.read_csv('PowerFactor.csv')
 Temp_Import = pd.read_csv('Temperature.csv')
 
+#Convert Data and Time Format
+IV_Import['DeviceTimeStamp'] = pd.to_datetime(IV_Import['DeviceTimeStamp'])
+PF_Import['DeviceTimeStamp'] = pd.to_datetime(PF_Import['DeviceTimeStamp'])
+Temp_Import['DeviceTimeStamp'] = pd.to_datetime(Temp_Import['DeviceTimeStamp'])
+
+
 #print(IV_Import.shape)
 #print(PF_Import.shape)
 #print(Temp_Import.shape)
@@ -113,9 +119,9 @@ Power_Data["kVA_total"] = (Power_Data["kW_total"]**2 + Power_Data["kvar_total"]*
 #print(Power_Data.shape)
 
 #Subsetting Rows by Date/Time Stamp Range (2019-06-25T13:06 to 2020-04-14T00:30)
+Power_Data['Month_Year'] = Power_Data['DeviceTimeStamp'].dt.to_period('M')
 Power_Data = Power_Data.set_index("DeviceTimeStamp")
 
-Power_Data['month'] = pd.to_datetime(Power_Data['DeviceTimeStamp']).dt.strftime('%Y-%m-%dT%H:%M%:%SZ')
 print(Power_Data.head())
 
 # Subsetting and removing indexes
@@ -123,26 +129,26 @@ print(Power_Data.head())
 #print(July_2019)
 
 #Plotting Charts
-#import seaborn as sns
-#import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-#g = sns.lineplot(x="DeviceTimeStamp", y="kW_total",
- #                data=July_2019)
- #                #hue="origin")
+g = sns.lineplot(x="DeviceTimeStamp", y="kW_total",
+                 data=Power_Data,
+                 hue="Month_Year")
 
 
 
 #Add a title "Average MPG Over Time"
 #g.set_title("kW over July 2019")
-#plt.xticks(rotation=-45)
+plt.xticks(rotation=-45)
 
 #g.fig.suptitle("Eoin Cowhey", y=1.02)
 
-#g.set(xlabel="Location EC",
-#      ylabel="% Who Like Techno")
+g.set(xlabel="Location EC",
+      ylabel="% Who Like Techno")
 
 
 # Show plot
-#plt.show()
+plt.show()
 
 
