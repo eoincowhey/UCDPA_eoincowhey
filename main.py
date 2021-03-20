@@ -72,10 +72,6 @@ Temp = Temp_Import.drop_duplicates(subset=["DeviceTimeStamp"])
 Power_Data_Raw = I_V.merge(PF, on="DeviceTimeStamp", how="left")
 Power_Data = Power_Data_Raw.fillna(1)
 
-missing_val2 = Power_Data.isnull().sum()
-#print(missing_val2)
-print(Power_Data.head())
-print(Power_Data.dtypes)
 
 
 #Power_Data.to_csv("Power_Data.csv")
@@ -111,6 +107,42 @@ Power_Data["kvar_total"] = kvar_total
 # Calculate Total Apparent Power [kvar] for each sample.
 Power_Data["kVA_total"] = (Power_Data["kW_total"]**2 + Power_Data["kvar_total"]**2)**(1/2)
 
+#Power_Data.to_csv("Power_Data.csv")
 
+#print(Power_Data.head())
+#print(Power_Data.shape)
+
+#Subsetting Rows by Date/Time Stamp Range (2019-06-25T13:06 to 2020-04-14T00:30)
+Power_Data = Power_Data.set_index("DeviceTimeStamp")
+
+Power_Data['month'] = pd.to_datetime(Power_Data['DeviceTimeStamp']).dt.strftime('%Y-%m-%dT%H:%M%:%SZ')
 print(Power_Data.head())
+
+# Subsetting and removing indexes
+#July_2019 = Power_Data.loc["2019-09-01T00:00":"2019-09-02T00:00"]
+#print(July_2019)
+
+#Plotting Charts
+#import seaborn as sns
+#import matplotlib.pyplot as plt
+
+#g = sns.lineplot(x="DeviceTimeStamp", y="kW_total",
+ #                data=July_2019)
+ #                #hue="origin")
+
+
+
+#Add a title "Average MPG Over Time"
+#g.set_title("kW over July 2019")
+#plt.xticks(rotation=-45)
+
+#g.fig.suptitle("Eoin Cowhey", y=1.02)
+
+#g.set(xlabel="Location EC",
+#      ylabel="% Who Like Techno")
+
+
+# Show plot
+#plt.show()
+
 
