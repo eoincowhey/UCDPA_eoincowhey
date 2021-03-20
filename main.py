@@ -39,6 +39,7 @@ Temp = Temp_Import.drop_duplicates(subset=["DeviceTimeStamp"])
 # Subsetting the pertinent columns
 Phase_Voltages = I_V[["DeviceTimeStamp","VL1","VL2","VL1"]]
 Phase_Currents = I_V[["DeviceTimeStamp","IL1","IL2","IL1"]]
+Phase_VI = I_V[["DeviceTimeStamp","VL1","VL2","VL1","IL1","IL2","IL3"]]
 PF_phase = PF[["DeviceTimeStamp","PFL1","PFL2","PFL3"]]
 Trafo_Oil_Temp = Temp[["DeviceTimeStamp","OTI"]]
 #print(Phase_Voltages.head())
@@ -60,3 +61,19 @@ print(Cleaned_data_2)
 #print(Cleaned_data_2.shape)
 
 print(Cleaned_data.shape)
+
+#Power Calculations
+Power_Data_Raw = Phase_VI.merge(PF_phase, on="DeviceTimeStamp", how="left")
+Power_Data = Power_Data_Raw.fillna(1)
+
+print(Power_Data.head())
+
+#def POWER(Voltage, Current, PowerFactor):
+    #return Voltage * Current * PowerFactor
+
+#def POWER(Power_Data[])
+
+#Total Power
+Power_Data["Power_L1"] = Power_Data["VL1"] * Power_Data["IL1"] * Power_Data["PFL1"]
+print(Power_L1.head())
+
