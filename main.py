@@ -92,6 +92,7 @@ Power_Data["kVA_total"] = (Power_Data["kW_total"]**2 + Power_Data["kvar_total"]*
 
 #Subsetting Rows by Date/Time Stamp Range (2019-06-25T13:06 to 2020-04-14T00:30)
 Power_Data['Month_Year'] = Power_Data['DeviceTimeStamp'].dt.to_period('M')
+Power_Data['Days'] = Power_Data['DeviceTimeStamp'].dt.to_period('D')
 
 # Removing indexes and setting DeviceTimeStamp as the Index.
 Power_Data = Power_Data.set_index("DeviceTimeStamp")
@@ -100,26 +101,37 @@ print(Power_Data.head())
 print(Power_Data.shape)
 
 
-##### Plotting Charts
+# Plotting Charts
 #Calling additional packages to be imported for plotting charts.
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# Set the style to "darkgrid"
+sns.set_style("darkgrid")
 
-g = sns.lineplot(x="DeviceTimeStamp", y="kW_total",
-                 data=Power_Data,
-                 hue="Month_Year")
+g = sns.catplot(x="kW_total", y="Month_Year",
+            data=Power_Data,
+            kind="bar", ci=None)
+
+plt.xticks(rotation=0)
+
+# Set title to "Age of Those Interested in Pets vs. Not"
+g.fig.suptitle("kW vs. Months", y=1)
+
+
+# Add x-axis and y-axis labels
+g.set(xlabel="Active Power [kW]", ylabel="Month")
+
 
 
 #Add a title "Average MPG Over Time"
 #g.set_title("kW over July 2019")
-plt.xticks(rotation=-45)
+
 
 #g.fig.suptitle("Eoin Cowhey", y=1.02)
 
-g.set(xlabel="Location EC",
-      ylabel="% Who Like Techno")
-
+#g.set(xlabel="Location EC",
+      #ylabel="% Who Like Techno")
 
 # Show plot
 plt.show()
@@ -130,3 +142,7 @@ plt.show()
 #Power_Data.to_csv("Power_Data.csv")
 #July_2019 = Power_Data.loc["2019-09-01T00:00":"2019-09-02T00:00"]
 #print(July_2019)
+
+#g = sns.lineplot(x="DeviceTimeStamp", y="kW_total",
+                 #data=Power_Data,
+                 #hue="Month_Year")
