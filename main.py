@@ -44,6 +44,7 @@ PF = PF.drop(["Avg_PF","Sum_PF","THDVL1","THDVL2","THDVL3","THDIL1","THDIL2","TH
 Temp = Temp.drop(["OLI","OTI_A","OTI_T","MOG_A"], axis = "columns")
 
 
+
 # Power Calculations
 
 # Merging Current/Voltage Data Frame with Power Factor which is required for Power Calculations.
@@ -124,8 +125,8 @@ print(Temperature_stats)
 # Average Ambient Temperature, Oil Temperature and Current (15 minute intervals)
 range = pd.date_range('2019-06-25', '2020-04-14', freq='15min')
 Temperature_Data = pd.DataFrame(index = range)
-Temperature_Data['OTI'] = np.random.randint(low=0, high=50, size=len(Temperature_Data.index))
-Temperature_Data['IL2'] = np.random.randint(low=0, high=50, size=len(Temperature_Data.index))
+Temperature_Data['OTI'] = np.random.randint(low=0, high=100, size=len(Temperature_Data.index))
+Temperature_Data['IL2'] = np.random.randint(low=0, high=300, size=len(Temperature_Data.index))
 Temperature_Data['ATI'] = np.random.randint(low=0, high=50, size=len(Temperature_Data.index))
 
 print(Temperature_Data.head(100))
@@ -133,18 +134,21 @@ print(Temperature_Data.head(100))
 def CT_Calc(Current, CT_Primary, CT_Secondary):
     return (Current/CT_Primary)*CT_Secondary
 
-Temperature_Data['I_sec'] = CT_Calc(Temperature_Data['IL2'],300,1.5)
+Temperature_Data['I_sec'] =  CT_Calc(Temperature_Data['IL2'],300,1.5)
 
-Temp_Sensor = pd.read_csv('Temp_Sensor.csv')
+# To apply temperature rise factors based on current measurement to calculate approximate winding temperature with List comprehension.
+Temperature_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i < 0.86 else 14 if i < 0.92
+                                else 16 if i < 0.99 else 18 if i < 1.04 else 20 if i < 1.10 else 22
+                                if i < 1.15 else 24 if i < 1.21 else 26 if i < 1.26 else 28 if i < 1.31
+                                else 30 for i in Temperature_Data['I_sec']]
 
-def lookup_grade(I_ret):
-    match = Temp_Sensor['Current'] <= I_ret
-    grade = Temp_Sensor['Temp'][match]
-    return grade.values[0]
+# Calculate approximate temperature of transformer winding
+Temperature_Data['WTI'] = Temperature_Data['OTI'] + Temperature_Data['Temp_Comp']
 
-Temperature_Data['I_sec'].apply(lookup_grade)
+Temperature_Data.to_csv("Temperature_Data.csv")
 
-print(Temperature_Data.head())
+
+print(Temperature_Data)
 
 
 # Plotting Charts
