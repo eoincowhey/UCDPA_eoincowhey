@@ -48,9 +48,9 @@ Temp = Temp.drop(["OLI","OTI_A","OTI_T","MOG_A"], axis = "columns")
 # Power Calculations
 
 # Merging Current/Voltage Data Frame with Power Factor which is required for Power Calculations.
-Power_Data = I_V.merge(PF, on="DeviceTimeStamp", how="left")
+Power_Data = I_V.merge(PF, on='DeviceTimeStamp', how='left')
 # Merging Temperature Data Frame with newly created Power_Data.
-Power_Data = Power_Data.merge(Temp, on="DeviceTimeStamp", how="left")
+Power_Data = Power_Data.merge(Temp, on='DeviceTimeStamp', how='left')
 
 # Where time stamps do not line up following left merge, missing Power Factor values are assigned 1 or unity power factor.
 values = {'PFL1': 1, 'PFL2': 1, 'PFL3': 1, 'FRQ': 50}
@@ -104,6 +104,7 @@ Power_Data["kVA_total"] = (Power_Data["kW_total"]**2 + Power_Data["kvar_total"]*
 # Creating new column in data frame to assign Month/Year and Month/Year/Day for each sample row.
 Power_Data['Month_Year'] = Power_Data['DeviceTimeStamp'].dt.to_period('M')
 Power_Data['Month_Year_Day'] = Power_Data['DeviceTimeStamp'].dt.to_period('D')
+Power_Data['Time'] = pd.to_datetime(Power_Data['DeviceTimeStamp'])
 
 # Removing indexes and setting DeviceTimeStamp as the Index.
 Power_Data = Power_Data.set_index("DeviceTimeStamp")
@@ -118,16 +119,16 @@ print(Power_stats)
 
 # Temperature Calculations
 
-Temperature_stats = Power_Data.groupby("Month_Year")[["OTI","WTI","ATI"]].agg([np.min, np.max, np.mean])
+Temperature_stats = Power_Data.groupby("Month_Year")[["OTI","ATI","IL2"]].agg([np.min, np.max, np.mean])
 print(Temperature_stats)
 
 
 # Average Ambient Temperature, Oil Temperature and Current (15 minute intervals)
-range = pd.date_range('2019-06-25', '2020-04-14', freq='15min')
+range = pd.date_range('2019-06-25', '2020-04-14', freq='45min')
 Temperature_Data = pd.DataFrame(index = range)
-Temperature_Data['OTI'] = np.random.randint(low=0, high=100, size=len(Temperature_Data.index))
-Temperature_Data['IL2'] = np.random.randint(low=0, high=300, size=len(Temperature_Data.index))
-Temperature_Data['ATI'] = np.random.randint(low=0, high=50, size=len(Temperature_Data.index))
+Temperature_Data['OTI'] = np.random.randint(low=0, high=51, size=len(Temperature_Data.index))
+Temperature_Data['IL2'] = np.random.randint(low=0, high=254, size=len(Temperature_Data.index))
+Temperature_Data['ATI'] = np.random.randint(low=0, high=44, size=len(Temperature_Data.index))
 
 print(Temperature_Data.head(100))
 
@@ -136,7 +137,9 @@ def CT_Calc(Current, CT_Primary, CT_Secondary):
 
 Temperature_Data['I_sec'] =  CT_Calc(Temperature_Data['IL2'],300,1.5)
 
-# To apply temperature rise factors based on current measurement to calculate approximate winding temperature with List comprehension.
+# To apply temperature rise factors based on current measurement to calculate approximate winding temperature
+# with List comprehension.
+
 Temperature_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i < 0.86 else 14 if i < 0.92
                                 else 16 if i < 0.99 else 18 if i < 1.04 else 20 if i < 1.10 else 22
                                 if i < 1.15 else 24 if i < 1.21 else 26 if i < 1.26 else 28 if i < 1.31
@@ -144,59 +147,82 @@ Temperature_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i 
 
 # Calculate approximate temperature of transformer winding
 Temperature_Data['WTI'] = Temperature_Data['OTI'] + Temperature_Data['Temp_Comp']
+#Temperature_Data['Month_Year'] = Temperature_Data['DeviceTimeStamp'].dt.to_period('M')
+#Temperature_Data.to_csv("Temperature_Data.csv")
 
-Temperature_Data.to_csv("Temperature_Data.csv")
+# % Loading of the Transformer [Full Load Current IFL = 300 A]
+Temperature_Data["%_Loading"] = ((Temperature_Data["IL2"] / 300) * 100).round(decimals=2)
 
-
-print(Temperature_Data)
+print(Temperature_Data.head())
 
 
 # Plotting Charts
 #Calling additional packages to be imported for plotting charts.
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#July_2019 = Power_Data.loc["2019-09-01":"2019-09-02"]
 
-# Set the style to "darkgrid"
-sns.set_style("darkgrid")
+# Graph 1: Average Transformer Active Power Loading
+###########################################################################
 
-g = sns.catplot(x="kW_total", y="Month_Year",
-            data=Power_Data,
-            kind="bar", ci=None)
+# Configure graph grid style
+sns.set_theme(style="whitegrid")
 
-plt.xticks(rotation=0)
+g = sns.catplot(
+    data=Power_Data, kind="bar",
+    x="Month_Year", y="kW_total",
+    ci=None, palette="dark", alpha=.6, height=6
+)
 
-# Set title to "Age of Those Interested in Pets vs. Not"
-g.fig.suptitle("kW vs. Months", y=1)
+plt.xticks(rotation=-45)
+g.despine(left=True)
+
+#Graph Title"
+g.fig.suptitle("Average Transformer Active Power Loading", y=0.99)
 
 # Add x-axis and y-axis labels
-g.set(xlabel="Active Power [kW]", ylabel="Month")
+g.set(xlabel="Year - Month", ylabel="Active Power [kW]")
+
+plt.show()
+##########################################################################
 
 
+# Graph 2: Average Transformer Reactive Power Loading
+###########################################################################
+sns.set_theme(style="whitegrid")
+
+g = sns.catplot(
+    data=Power_Data, kind="bar",
+    x="Month_Year", y="kvar_total",
+    ci=None, palette="dark", alpha=.6, height=6
+)
+
+plt.xticks(rotation=-45)
+g.despine(left=True)
+
+#Graph Title"
+g.fig.suptitle("Average Transformer Reactive Power Loading", y=0.99)
+
+# Add x-axis and y-axis labels
+g.set(xlabel="Year - Month", ylabel="Reactive Power [kvar]")
 
 plt.show()
 
 
-#Add a title "Average MPG Over Time"
-#g.set_title("kW over July 2019")
 
+###############################################################################
 
-#g.fig.suptitle("Eoin Cowhey", y=1.02)
+# Graph 3: Temperature Loading
+###############################################################################
 
-#g.set(xlabel="Location EC",
-      #ylabel="% Who Like Techno")
+# Change to use relplot() instead of scatterplot()
+
+sns.relplot(x="%_Loading", y="WTI",
+                data=Temperature_Data,kind="line", ci="sd")
 
 # Show plot
-#plt.show()
+plt.show()
 
 
 
-# Code to be deleted
-#Power_Data.to_csv("Power_Data.csv")
-#July_2019 = Power_Data.loc["2019-09-01T00:00":"2019-09-02T00:00"]
-#print(July_2019)
-
-#g = sns.lineplot(x="DeviceTimeStamp", y="kW_total",
-                 #data=Power_Data,
-                 #hue="Month_Year")
