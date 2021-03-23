@@ -119,39 +119,31 @@ Temperature_stats = Power_Data.groupby('Month_Year')[['OTI','ATI','IL2']].agg([n
 print(Temperature_stats)
 
 
-# Average Ambient Temperature, Oil Temperature and Current (45 minute intervals)
-range = pd.date_range('2019-06-25', '2020-04-14', freq='45min')
-Temperature_Data = pd.DataFrame(index = range)
-Temperature_Data['OTI'] = np.random.randint(low=0, high=51, size=len(Temperature_Data.index))
-Temperature_Data['IL2'] = np.random.randint(low=0, high=254, size=len(Temperature_Data.index))
-Temperature_Data['ATI'] = np.random.randint(low=0, high=44, size=len(Temperature_Data.index))
-
-print(Temperature_Data.head(100))
-
 def CT_Calc(Current, CT_Primary, CT_Secondary):
     return (Current/CT_Primary)*CT_Secondary
 
-Temperature_Data['I_sec'] =  CT_Calc(Temperature_Data['IL2'],300,1.5)
+Power_Data['I_sec'] =  CT_Calc(Power_Data['IL2'],300,1.5)
 
 # To apply temperature rise factors based on current measurement to calculate approximate winding temperature
 # with List comprehension.
 
-Temperature_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i < 0.86 else 14 if i < 0.92
+Power_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i < 0.86 else 14 if i < 0.92
                                 else 16 if i < 0.99 else 18 if i < 1.04 else 20 if i < 1.10 else 22
                                 if i < 1.15 else 24 if i < 1.21 else 26 if i < 1.26 else 28 if i < 1.31
-                                else 30 for i in Temperature_Data['I_sec']]
+                                else 30 for i in Power_Data['I_sec']]
 
 # Calculate approximate temperature of transformer winding
-Temperature_Data['WTI'] = Temperature_Data['OTI'] + Temperature_Data['Temp_Comp']
-#Temperature_Data['Month_Year'] = Temperature_Data['DeviceTimeStamp'].dt.to_period('M')
-#Temperature_Data.to_csv('Temperature_Data.csv')
+Power_Data['WTI'] = Power_Data['OTI'] + Power_Data['Temp_Comp']
 
 # % Loading of the Transformer [Full Load Current IFL = 300 A]
-Temperature_Data['%_Loading'] = ((Temperature_Data['IL2'] / 300) * 100).round(decimals=2)
+Power_Data['%_Loading'] = ((Power_Data['IL2'] / 300) * 100).round(decimals=2)
 
 
 
-print(Temperature_Data.head())
+# Obtains an average sample at 45 min intervals
+Temperature_Data = Power_Data.resample('45min').mean()
+
+print(Temperature_Data.head(100))
 
 
 # Plotting Charts
@@ -214,7 +206,7 @@ plt.show()
 ###############################################################################
 
 # Slicing the day
-Date_range = Temperature_Data.loc['2019-09-01 00:00':'2019-09-01 23:59']
+Date_range = Temperature_Data.loc['2019-08-05 00:00':'2019-08-05 23:59']
 
 
 fig, ax = plt.subplots()
