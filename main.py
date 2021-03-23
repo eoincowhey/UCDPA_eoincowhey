@@ -1,5 +1,4 @@
 # UCDPA_eoincowhey
-
 # Eoin Cowhey Introductory Certificate in Data Analytics
 
 # Project description: Distribution Transformer Online Monitoring
@@ -49,12 +48,14 @@ Temp = Temp.drop(['OLI','OTI_A','OTI_T','MOG_A'], axis = 'columns')
 
 # Merging Current/Voltage Data Frame with Power Factor which is required for Power Calculations.
 Power_Data = I_V.merge(PF, on='DeviceTimeStamp', how='left')
+
 # Merging Temperature Data Frame with newly created Power_Data.
 Power_Data = Power_Data.merge(Temp, on='DeviceTimeStamp', how='left')
 
 # Where time stamps do not line up following left merge, missing Power Factor values are assigned 1 or unity power factor.
 values = {'PFL1': 1, 'PFL2': 1, 'PFL3': 1, 'FRQ': 50}
 Power_Data[['PFL1','PFL2','PFL3','FRQ']] = Power_Data[['PFL1','PFL2','PFL3','FRQ']].fillna(value=values)
+
 # For OTI as temperature change is normally slow and predictable, therefore the missing values are forward filled.
 Power_Data[['OTI','WTI','ATI']] = Power_Data[['OTI','WTI','ATI']].fillna(method='ffill')
 
@@ -65,7 +66,7 @@ print(Missing_Power_Data)
 # To demonstrate the use of functions where the same calculation may be required multiple times.
 # Functions are defined for Active and Reactive Power calculations.
 
-# Active Power per phase P = V x I x Cos@
+# Active Power per phase P = V x I x cos@
 def Watts_Phase(Voltage, Current, PowerFactor):
     return Voltage * Current * PowerFactor
 
@@ -83,7 +84,7 @@ Power_Data['varL3'] = var_Phase(Power_Data['VL3'], Power_Data['IL3'], Power_Data
 
 
 # Calculate Total Active Power [kW], Reactive Power [kvar] for each sample using iterrows method.
-# This method slows down the program but demonstrates how the itterows function can be used.
+# This method slows down the program speed but demonstrates how the itterows function can be used.
 kW_total = []
 kvar_total = []
 
@@ -118,21 +119,21 @@ print(Power_stats)
 Temperature_stats = Power_Data.groupby('Month_Year')[['OTI','ATI','IL2']].agg([np.min, np.max, np.mean])
 print(Temperature_stats)
 
-
+# Defining calculation for winding thermal image CT
 def CT_Calc(Current, CT_Primary, CT_Secondary):
     return (Current/CT_Primary)*CT_Secondary
 
-Power_Data['I_sec'] =  CT_Calc(Power_Data['IL2'],300,1.5)
+Power_Data['I_sec'] = CT_Calc(Power_Data['IL2'],300,1.5)
+
 
 # To apply temperature rise factors based on current measurement to calculate approximate winding temperature
 # with List comprehension.
-
 Power_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i < 0.86 else 14 if i < 0.92
                                 else 16 if i < 0.99 else 18 if i < 1.04 else 20 if i < 1.10 else 22
                                 if i < 1.15 else 24 if i < 1.21 else 26 if i < 1.26 else 28 if i < 1.31
                                 else 30 for i in Power_Data['I_sec']]
 
-# Calculate approximate temperature of transformer winding
+# Calculate approximate temperature of transformer winding (above oil)
 Power_Data['WTI'] = Power_Data['OTI'] + Power_Data['Temp_Comp']
 
 # % Loading of the Transformer [Full Load Current IFL = 300 A]
@@ -140,10 +141,9 @@ Power_Data['%_Loading'] = ((Power_Data['IL2'] / 300) * 100).round(decimals=2)
 
 
 
-# Obtains an average sample at 45 min intervals
+# Obtains an average sample at 45 min intervals (thermal imaging of windings works at this rate)
 Temperature_Data = Power_Data.resample('45min').mean()
 
-print(Temperature_Data.head(100))
 
 
 # Plotting Charts
@@ -165,7 +165,7 @@ g = sns.catplot(
     ci=None, palette='dark', alpha=.6, height=6
 )
 
-plt.xticks(rotation=-45)
+plt.xticks(rotation=0)
 g.despine(left=True)
 
 #Graph Title'
@@ -188,7 +188,7 @@ g = sns.catplot(
     ci=None, palette='dark', alpha=.6, height=6
 )
 
-plt.xticks(rotation=-45)
+plt.xticks(rotation=0)
 g.despine(left=True)
 
 #Graph Title'
@@ -206,6 +206,7 @@ plt.show()
 ###############################################################################
 
 # Slicing the day
+# Load was particularly high on this date, so this is an opportunity to examine it in detail.
 Date_range = Temperature_Data.loc['2019-08-05 00:00':'2019-08-05 23:59']
 
 
@@ -215,19 +216,27 @@ x = Date_range.index.hour
 y1 = Date_range['OTI']
 y2 = Date_range['WTI']
 
+
 ax.plot(x, y1, marker='.', color='r', label='Oil Temperature')
 ax.plot(x, y2, marker='.', linestyle=':', color='b', label='Winding Temperature')
 
 plt.xticks(rotation=0)
 
+ax.set_title("Transformer Temperature Characteristics")
 ax.set_xlabel('Hours')
 ax.set_ylabel('Temperature [degC]')
+
+ax.legend(loc="upper left")
+
 
 plt.show()
 
 ##########################################################################
 
-# Slicing the day
+# Graph 4: Transformer Loading and Temperature Characteristic
+###############################################################################
+
+# The same data as previous slide is examined here
 
 
 fig, ax = plt.subplots()
@@ -239,15 +248,18 @@ Wind_Temp = Date_range['WTI']
 Loading = Date_range['%_Loading']
 
 ax.plot(hour, Oil_Temp, marker='.', color='r', label='Oil Temperature')
-ax2.plot(hour, Loading, color='g', label='% Loading')
+ax2.plot(hour, Loading, color='g', label='Trafo. Loading')
 
 #plt.xticks(rotation=-45)
 
-plt.title('Oil Temperature and Loading over 1 Day')
+plt.title('Oil Temperature and Loading Characteristics')
 
 ax.set_xlabel('Hours')
 ax.set_ylabel('Temperature [degC]')
 ax2.set_ylabel('% of Full Load Current')
+
+ax.legend()
+ax2.legend()
 
 print(Date_range)
 
