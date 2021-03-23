@@ -34,14 +34,14 @@ print(missing_val_PF)
 print(missing_val_Temp)
 
 # The following code is used to drop duplicate time stamp values.
-I_V = IV_Import.drop_duplicates(subset=["DeviceTimeStamp"],).copy()
-PF = PF_Import.drop_duplicates(subset=["DeviceTimeStamp"]).copy()
-Temp = Temp_Import.drop_duplicates(subset=["DeviceTimeStamp"]).copy()
+I_V = IV_Import.drop_duplicates(subset=['DeviceTimeStamp'],).copy()
+PF = PF_Import.drop_duplicates(subset=['DeviceTimeStamp']).copy()
+Temp = Temp_Import.drop_duplicates(subset=['DeviceTimeStamp']).copy()
 
 # The following 3 lines of code are used to remove unnecessary columns in each data set.
-I_V = I_V.drop(["VL12","VL23","VL31","INUT"], axis = "columns")
-PF = PF.drop(["Avg_PF","Sum_PF","THDVL1","THDVL2","THDVL3","THDIL1","THDIL2","THDIL3","MDIL1","MDIL2","MDIL3"], axis = "columns")
-Temp = Temp.drop(["OLI","OTI_A","OTI_T","MOG_A"], axis = "columns")
+I_V = I_V.drop(['VL12','VL23','VL31','INUT'], axis = 'columns')
+PF = PF.drop(['Avg_PF','Sum_PF','THDVL1','THDVL2','THDVL3','THDIL1','THDIL2','THDIL3','MDIL1','MDIL2','MDIL3'], axis = 'columns')
+Temp = Temp.drop(['OLI','OTI_A','OTI_T','MOG_A'], axis = 'columns')
 
 
 
@@ -74,12 +74,12 @@ def var_Phase(Voltage, Current, PowerFactor):
     return (Voltage * Current) * np.sin(np.arccos(PowerFactor))
 
 # Active and Reactive Power per phase calculated in Watts and kvar.
-Power_Data["WL1"] = Watts_Phase(Power_Data["VL1"],Power_Data["IL1"],Power_Data["PFL1"])
-Power_Data["WL2"] = Watts_Phase(Power_Data["VL2"],Power_Data["IL2"],Power_Data["PFL2"])
-Power_Data["WL3"] = Watts_Phase(Power_Data["VL3"],Power_Data["IL3"],Power_Data["PFL3"])
-Power_Data["varL1"] = var_Phase(Power_Data["VL1"], Power_Data["IL1"], Power_Data["PFL1"])
-Power_Data["varL2"] = var_Phase(Power_Data["VL2"], Power_Data["IL2"], Power_Data["PFL2"])
-Power_Data["varL3"] = var_Phase(Power_Data["VL3"], Power_Data["IL3"], Power_Data["PFL3"])
+Power_Data['WL1'] = Watts_Phase(Power_Data['VL1'],Power_Data['IL1'],Power_Data['PFL1'])
+Power_Data['WL2'] = Watts_Phase(Power_Data['VL2'],Power_Data['IL2'],Power_Data['PFL2'])
+Power_Data['WL3'] = Watts_Phase(Power_Data['VL3'],Power_Data['IL3'],Power_Data['PFL3'])
+Power_Data['varL1'] = var_Phase(Power_Data['VL1'], Power_Data['IL1'], Power_Data['PFL1'])
+Power_Data['varL2'] = var_Phase(Power_Data['VL2'], Power_Data['IL2'], Power_Data['PFL2'])
+Power_Data['varL3'] = var_Phase(Power_Data['VL3'], Power_Data['IL3'], Power_Data['PFL3'])
 
 
 # Calculate Total Active Power [kW], Reactive Power [kvar] for each sample using iterrows method.
@@ -88,16 +88,16 @@ kW_total = []
 kvar_total = []
 
 for i, row in Power_Data.iterrows():
-   kW = (row["WL1"] + row["WL2"] + row["WL3"]) / 1000
-   kvar = (row["varL1"] + row["varL2"] + row["varL3"]) / 1000
+   kW = (row['WL1'] + row['WL2'] + row['WL3']) / 1000
+   kvar = (row['varL1'] + row['varL2'] + row['varL3']) / 1000
    kW_total.append(kW)
    kvar_total.append(kvar)
-Power_Data["kW_total"] = kW_total
-Power_Data["kvar_total"] = kvar_total
+Power_Data['kW_total'] = kW_total
+Power_Data['kvar_total'] = kvar_total
 
 
 # Calculate Total Apparent Power [kvar] for each sample.
-Power_Data["kVA_total"] = (Power_Data["kW_total"]**2 + Power_Data["kvar_total"]**2)**(1/2)
+Power_Data['kVA_total'] = (Power_Data['kW_total']**2 + Power_Data['kvar_total']**2)**(1/2)
 
 
 #Date/Time Stamp Range (2019-06-25T13:06 to 2020-04-14T00:30)
@@ -107,23 +107,19 @@ Power_Data['Month_Year_Day'] = Power_Data['DeviceTimeStamp'].dt.to_period('D')
 Power_Data['Time'] = pd.to_datetime(Power_Data['DeviceTimeStamp'])
 
 # Removing indexes and setting DeviceTimeStamp as the Index.
-Power_Data = Power_Data.set_index("DeviceTimeStamp")
+Power_Data = Power_Data.set_index('DeviceTimeStamp')
 
 # Using Numpy to extract summary statistic data from Power Data for each Month
-Power_stats = Power_Data.groupby("Month_Year")[["kW_total","kvar_total"]].agg([np.min,np.max, np.mean])
-
-print(Power_Data.head())
-print(Power_Data.shape)
+Power_stats = Power_Data.groupby('Month_Year')[['kW_total','kvar_total']].agg([np.min,np.max, np.mean])
 print(Power_stats)
 
 
 # Temperature Calculations
-
-Temperature_stats = Power_Data.groupby("Month_Year")[["OTI","ATI","IL2"]].agg([np.min, np.max, np.mean])
+Temperature_stats = Power_Data.groupby('Month_Year')[['OTI','ATI','IL2']].agg([np.min, np.max, np.mean])
 print(Temperature_stats)
 
 
-# Average Ambient Temperature, Oil Temperature and Current (15 minute intervals)
+# Average Ambient Temperature, Oil Temperature and Current (45 minute intervals)
 range = pd.date_range('2019-06-25', '2020-04-14', freq='45min')
 Temperature_Data = pd.DataFrame(index = range)
 Temperature_Data['OTI'] = np.random.randint(low=0, high=51, size=len(Temperature_Data.index))
@@ -148,10 +144,11 @@ Temperature_Data['Temp_Comp'] = [0 if i < 0.72 else 10 if i < 0.79 else 12 if i 
 # Calculate approximate temperature of transformer winding
 Temperature_Data['WTI'] = Temperature_Data['OTI'] + Temperature_Data['Temp_Comp']
 #Temperature_Data['Month_Year'] = Temperature_Data['DeviceTimeStamp'].dt.to_period('M')
-#Temperature_Data.to_csv("Temperature_Data.csv")
+#Temperature_Data.to_csv('Temperature_Data.csv')
 
 # % Loading of the Transformer [Full Load Current IFL = 300 A]
-Temperature_Data["%_Loading"] = ((Temperature_Data["IL2"] / 300) * 100).round(decimals=2)
+Temperature_Data['%_Loading'] = ((Temperature_Data['IL2'] / 300) * 100).round(decimals=2)
+
 
 
 print(Temperature_Data.head())
@@ -168,48 +165,47 @@ import matplotlib.pyplot as plt
 ###########################################################################
 
 # Configure graph grid style
-sns.set_theme(style="whitegrid")
+sns.set_theme(style='whitegrid')
 
 g = sns.catplot(
-    data=Power_Data, kind="bar",
-    x="Month_Year", y="kW_total",
-    ci=None, palette="dark", alpha=.6, height=6
+    data=Power_Data, kind='bar',
+    x='Month_Year', y='kW_total',
+    ci=None, palette='dark', alpha=.6, height=6
 )
 
 plt.xticks(rotation=-45)
 g.despine(left=True)
 
-#Graph Title"
-g.fig.suptitle("Average Transformer Active Power Loading", y=0.99)
+#Graph Title'
+g.fig.suptitle('Average Transformer Active Power Loading', y=0.99)
 
 # Add x-axis and y-axis labels
-g.set(xlabel="Year - Month", ylabel="Active Power [kW]")
+g.set(xlabel='Year - Month', ylabel='Active Power [kW]')
 
 plt.show()
 ##########################################################################
 
 
-# Graph 2: Average Transformer Reactive Power Loading
+# Graph 2: Daily Transformer Reactive Power Loading
 ###########################################################################
-sns.set_theme(style="whitegrid")
+sns.set_theme(style='whitegrid')
 
 g = sns.catplot(
-    data=Power_Data, kind="bar",
-    x="Month_Year", y="kvar_total",
-    ci=None, palette="dark", alpha=.6, height=6
+    data=Power_Data, kind='bar',
+    x='Month_Year', y='kvar_total',
+    ci=None, palette='dark', alpha=.6, height=6
 )
 
 plt.xticks(rotation=-45)
 g.despine(left=True)
 
-#Graph Title"
-g.fig.suptitle("Average Transformer Reactive Power Loading", y=0.99)
+#Graph Title'
+g.fig.suptitle('Average Transformer Reactive Power Loading', y=0.99)
 
 # Add x-axis and y-axis labels
-g.set(xlabel="Year - Month", ylabel="Reactive Power [kvar]")
+g.set(xlabel='Year - Month', ylabel='Reactive Power [kvar]')
 
 plt.show()
-
 
 
 ###############################################################################
@@ -230,7 +226,7 @@ y2 = Date_range['WTI']
 ax.plot(x, y1, marker='.', color='r', label='Oil Temperature')
 ax.plot(x, y2, marker='.', linestyle=':', color='b', label='Winding Temperature')
 
-plt.xticks(rotation=-45)
+plt.xticks(rotation=0)
 
 ax.set_xlabel('Hours')
 ax.set_ylabel('Temperature [degC]')
@@ -239,22 +235,29 @@ plt.show()
 
 ##########################################################################
 
-#fig, ax = plt.subplots()
+# Slicing the day
 
-x = Date_range.index.hour
-y1 = Temperature_Data['OTI']
-y2 = Temperature_Data['WTI']
-y3 = Temperature_Data['%_Loading']
 
-plt.subplot(2,1,1)
-r= plt.bar(x, y1, marker='.', color='r', label='Oil Temperature')
+fig, ax = plt.subplots()
+ax2 = ax.twinx()
 
-plt.subplot(2,1,2)
-s = plt.bar(x, y2, marker='.', linestyle=':', color='b', label='Winding Temperature')
+hour = Date_range.index.hour
+Oil_Temp = Date_range['OTI']
+Wind_Temp = Date_range['WTI']
+Loading = Date_range['%_Loading']
 
-#plt.subplot(2,1,3)
-#plt.plot(x, y3, marker='.', linestyle=':', color='b', label='Winding Temperature')
+ax.plot(hour, Oil_Temp, marker='.', color='r', label='Oil Temperature')
+ax2.plot(hour, Loading, color='g', label='% Loading')
 
+#plt.xticks(rotation=-45)
+
+plt.title('Oil Temperature and Loading over 1 Day')
+
+ax.set_xlabel('Hours')
+ax.set_ylabel('Temperature [degC]')
+ax2.set_ylabel('% of Full Load Current')
+
+print(Date_range)
 
 plt.show()
 ####################################################################
