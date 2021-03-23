@@ -153,6 +153,7 @@ Temperature_Data['WTI'] = Temperature_Data['OTI'] + Temperature_Data['Temp_Comp'
 # % Loading of the Transformer [Full Load Current IFL = 300 A]
 Temperature_Data["%_Loading"] = ((Temperature_Data["IL2"] / 300) * 100).round(decimals=2)
 
+
 print(Temperature_Data.head())
 
 
@@ -218,8 +219,13 @@ plt.show()
 
 # Change to use relplot() instead of scatterplot()
 
-sns.relplot(x="%_Loading", y="WTI",
-                data=Temperature_Data,kind="line", ci="sd")
+#July_2019 = .loc["2019-09-01 00:00":"2019-09-02 00:00"]
+
+July2019 = Temperature_Data.loc["2019-09-01":"2019-09-02"]
+print(July2019)
+
+sns.relplot(y="%_Loading", x="WTI",
+                data=July2019, kind="line")
 
 # Show plot
 plt.show()
