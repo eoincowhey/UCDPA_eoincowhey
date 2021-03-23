@@ -214,21 +214,53 @@ plt.show()
 
 ###############################################################################
 
-# Graph 3: Temperature Loading
+# Graph 3: Daily Transformer Operating Temperature
 ###############################################################################
 
-# Change to use relplot() instead of scatterplot()
+# Slicing the day
+Date_range = Temperature_Data.loc['2019-09-01 00:00':'2019-09-01 23:59']
 
-#July_2019 = .loc["2019-09-01 00:00":"2019-09-02 00:00"]
 
-July2019 = Temperature_Data.loc["2019-09-01":"2019-09-02"]
-print(July2019)
+fig, ax = plt.subplots()
 
-sns.relplot(y="%_Loading", x="WTI",
-                data=July2019, kind="line")
+x = Date_range.index.hour
+y1 = Date_range['OTI']
+y2 = Date_range['WTI']
 
-# Show plot
+ax.plot(x, y1, marker='.', color='r', label='Oil Temperature')
+ax.plot(x, y2, marker='.', linestyle=':', color='b', label='Winding Temperature')
+
+plt.xticks(rotation=-45)
+
+ax.set_xlabel('Hours')
+ax.set_ylabel('Temperature [degC]')
+
 plt.show()
+
+##########################################################################
+
+#fig, ax = plt.subplots()
+
+x = Date_range.index.hour
+y1 = Temperature_Data['OTI']
+y2 = Temperature_Data['WTI']
+y3 = Temperature_Data['%_Loading']
+
+plt.subplot(2,1,1)
+r= plt.bar(x, y1, marker='.', color='r', label='Oil Temperature')
+
+plt.subplot(2,1,2)
+s = plt.bar(x, y2, marker='.', linestyle=':', color='b', label='Winding Temperature')
+
+#plt.subplot(2,1,3)
+#plt.plot(x, y3, marker='.', linestyle=':', color='b', label='Winding Temperature')
+
+
+plt.show()
+####################################################################
+
+
+
 
 
 
